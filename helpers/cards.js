@@ -1,3 +1,6 @@
+const fetch = require('node-fetch');
+const { checkSuccess } = require('./requestErrors');
+
 const colors = [
     {
         name: 'H',
@@ -154,4 +157,34 @@ const getEmoji = (code = '', suit = '') =>
     return [emoji, suitEmoji];
 }
 
-module.exports = getEmoji;
+const drawCard = async(interaction, deck_id, count) =>
+{
+    return await fetch(`https://deckofcardsapi.com/api/deck/${deck_id}/draw/?count=${count}`, {method: 'Get'})
+        .then(res => res.json())
+        .then(cards_json =>
+        {
+            if(!checkSuccess(cards_json, interaction)) return;
+
+            let score = 0;
+
+            let cardsMessageTop = '';
+            let cardsMessageBottom = '';
+
+            cards_json.cards.forEach(e =>
+            {
+                const [card, suit] = getEmoji(e.code, e.suit);
+
+                cardsMessageTop += card + ' ';
+                cardsMessageBottom += suit + ' ';
+
+                score += e.value.length > 1 ? 10 : Number.parseInt(e.value);
+            });
+
+            return {messageString: cardsMessageTop + '\n' + cardsMessageBottom, score};
+        });
+}
+
+module.exports = {
+    getEmoji,
+    drawCard
+};

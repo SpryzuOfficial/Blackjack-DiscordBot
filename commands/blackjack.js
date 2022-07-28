@@ -1,34 +1,51 @@
 const fetch = require('node-fetch');
 
-const { drawCard, 
-        addToPlayer, 
-        addToHome, 
-        updateMessage } = require('../helpers/game');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
+const { addToPlayer, 
+        addToHome, 
+        updateMessage,
+        createGame } = require('../games/blackjack');
+
+const { drawCard } = require('../helpers/cards');
 const { checkSuccess } = require('../helpers/requestErrors');
 
 module.exports = {
     name: 'blackjack',
 
-    async execute(client, message, args)
+    data: new SlashCommandBuilder()
+            .setName('blackjack')
+            .setDescription('Starts a blackjack game')
+            .addNumberOption((option) => option.setName('deck-count').setDescription('Number of decks').setRequired(true).setMinValue(1)),
+
+    async execute(client, interaction)
     {
         const settings = {method: 'Get'};
+        
+        const deckCount = interaction.options.getNumber('deck-count');
 
-        fetch(`https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=${(args.length > 0) ? args[0] : 1}`, settings)
+        fetch(`https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=${deckCount}`, settings)
             .then(res => res.json())
             .then(async(deck_json) =>
             {
-                if(!checkSuccess(deck_json, message)) return;
+                if(!checkSuccess(deck_json, interaction)) return;
+
+                const id = interaction.member.id;
+                if(!createGame(id))
+                {
+                    interaction.reply({content: 'You are playing Blackjack!', ephemeral: true});
+                    return;
+                }
 
                 const deck_id = deck_json.deck_id;
 
-                const {messageString: playerCardsString, score: playerScore} = await drawCard(message, deck_id, 2);
-                const {messageString: homeCardsString, score: homeScore} = await drawCard(message, deck_id, 1);
+                const {messageString: playerCardsString, score: playerScore} = await drawCard(interaction, deck_id, 2);
+                const {messageString: homeCardsString, score: homeScore} = await drawCard(interaction, deck_id, 1);
 
-                addToPlayer(playerScore, playerCardsString);
-                addToHome(homeScore, homeCardsString);
+                addToPlayer(id, playerScore, playerCardsString);
+                addToHome(id, homeScore, homeCardsString);
 
-                updateMessage(undefined, message, deck_id);
+                updateMessage(id, interaction, deck_id);
             });
     }
 }

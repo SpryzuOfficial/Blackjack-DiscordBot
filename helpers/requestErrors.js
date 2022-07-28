@@ -1,8 +1,8 @@
-const checkSuccess = (json, message) =>
+const checkSuccess = (json, interaction) =>
 {
     if(!json.success)
     {
-        message.channel.send('Unexpected error! please contact with the Staff team');
+        interaction.reply('Unexpected error! please contact with the Staff team');
 
         return false;
     }
