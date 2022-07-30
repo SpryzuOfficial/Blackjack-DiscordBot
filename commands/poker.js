@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 
-const { createGame, updateMessage} = require('../games/poker');
+const { createGame, updateMessage } = require('../games/poker');
 
 module.exports = {
     name: 'poker',

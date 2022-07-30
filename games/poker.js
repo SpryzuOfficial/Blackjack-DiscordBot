@@ -32,6 +32,29 @@ const joinPlayer = (id, playerId) =>
     return {res: true};
 }
 
+const kickPlayer = (id, playerId) =>
+{
+    const result = searchId(id);
+
+    let flag = false;
+
+    if(searchPlayer(result.index, playerId))
+    {
+        games.at(result.index).players.forEach((e, i) =>
+        {
+            if(e.id === playerId)
+            {
+                games.at(result.index).players.splice(i, 1);
+
+                flag = true;
+                return;
+            }
+        });
+    }
+
+    return flag;
+}
+
 const updateMessage = (interaction, id) =>
 {
     const result = searchId(id);
@@ -57,6 +80,10 @@ const updateMessage = (interaction, id) =>
                     .setLabel('Join')
                     .setStyle('SUCCESS')
                     .setCustomId(`PJP|${id}`),
+                new MessageButton()
+                    .setLabel('Quit')
+                    .setStyle('DANGER')
+                    .setCustomId(`PQG|${id}`),
                 new MessageButton()
                     .setLabel('Start game')
                     .setStyle('SECONDARY')
@@ -88,6 +115,13 @@ const pokerInteractions = (interaction) =>
         if(idValues[0] === 'PSG')
         {
             
+        }
+
+        if(idValues[0] === 'PQG')
+        {
+            if(kickPlayer(idValues[1], id)) return updateMessage(interaction, idValues[1]);
+
+            interaction.reply({content: `You are not in this game!`, ephemeral: true});
         }
     }
 }
