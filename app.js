@@ -4,7 +4,9 @@ const fs = require('fs');
 const {Client, Intents, Collection} = require('discord.js');
 
 const createSlash = require('./slashcommands');
+
 const {blackjackInteractions} = require('./games/blackjack');
+const {pokerInteractions} = require('./games/poker');
 
 const client = new Client({intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]});
 
@@ -34,6 +36,7 @@ client.on('interactionCreate', async(interaction) =>
     }
 
     blackjackInteractions(interaction);
+    pokerInteractions(interaction);
 });
 
 client.login(process.env.TOKEN);

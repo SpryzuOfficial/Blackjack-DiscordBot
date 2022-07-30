@@ -2,7 +2,7 @@ const {MessageEmbed, MessageActionRow, MessageButton} = require('discord.js');
 
 const { drawCard } = require('../helpers/cards');
 
-let games = [];
+const games = [];
 
 const createGame = (id) =>
 {
@@ -83,12 +83,12 @@ const updateMessage = async(id, interaction, deck_id, stand=false) =>
                 new MessageButton()
                     .setStyle('SUCCESS')
                     .setLabel('Hit')
-                    .setCustomId(`H|${deck_id}`),
+                    .setCustomId(`BJH|${deck_id}`),
 
                 new MessageButton()
                     .setStyle('SUCCESS')
                     .setLabel('Stand')
-                    .setCustomId(`S|${deck_id}`)
+                    .setCustomId(`BJS|${deck_id}`)
             ]);
 
     if(player > 21)
@@ -125,14 +125,14 @@ const blackjackInteractions = async(interaction) =>
     if(interaction.isButton())
     {
         const idValues = interaction.customId.split('|');
-        if(idValues[0] === 'H')
+        if(idValues[0] === 'BJH')
         {
             const {messageString, score} = await drawCard(interaction, idValues[1], 1);
 
             addToPlayer(id, score, messageString);
             updateMessage(id, interaction, idValues[1]);
         }
-        else if(idValues[0] === 'S')
+        else if(idValues[0] === 'BJS')
         {
             let flag;
 
