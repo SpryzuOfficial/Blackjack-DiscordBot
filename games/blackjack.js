@@ -25,55 +25,56 @@ const createGame = (id) =>
 
 const endGame = (id) =>
 {
-    const res = searchId(id);
+    const { result, index } = searchId(id);
 
-    if(res.result) games.splice(games.indexOf(res.index), 1);
+    if(result) games.splice(games.indexOf(index), 1);
 }
 
 const addToPlayer = (id, score, cards) =>
 {   
-    const res = searchId(id);
+    const {result, index, element} = searchId(id);
 
-    if(!res.result) return;
+    if(!result) return;
 
-    const playerCardsInLine = res.element.player.cards.split('\n');
+    const playerCardsInLine = element.player.cards.split('\n');
     const cardsInLine = cards.split('\n');
 
-    games.at(res.index).player.cards = `${playerCardsInLine[0] + cardsInLine[0]}\n${playerCardsInLine[1] + cardsInLine[1]}`;
-    games.at(res.index).player.points += score;
+    games.at(index).player.cards = `${playerCardsInLine[0] + cardsInLine[0]}\n${playerCardsInLine[1] + cardsInLine[1]}`;
+    games.at(index).player.points += score;
 }
 
 const addToHome = (id, score, cards) =>
 {
-    const res = searchId(id);
+    const {result, index, element} = searchId(id);
 
-    if(!res.result) return;
+    if(!result) return;
 
-    const homeCardsInLine = res.element.home.cards.split('\n');
+    const homeCardsInLine = element.home.cards.split('\n');
     const cardsInLine = cards.split('\n');
 
-    games.at(res.index).home.cards = `${homeCardsInLine[0] + cardsInLine[0]}\n${homeCardsInLine[1] + cardsInLine[1]}`;
-    games.at(res.index).home.points += score;
+    games.at(index).home.cards = `${homeCardsInLine[0] + cardsInLine[0]}\n${homeCardsInLine[1] + cardsInLine[1]}`;
+    games.at(index).home.points += score;
 
-    return (games.at(res.index).home.points < games.at(res.index).player.points);
+    return (games.at(index).home.points < games.at(index).player.points);
 }
 
 const updateMessage = async(id, interaction, deck_id, stand=false) =>
 {
-    const res = searchId(id);
+    const {result, index} = searchId(id);
 
-    if(!res.result) return;
+    if(!result) return;
 
     let gameover = false;
 
-    const home = games.at(res.index).home.points;
-    const player = games.at(res.index).player.points;
+    const home = games.at(index).home.points;
+    const player = games.at(index).player.points;
 
-    const homeCards = games.at(res.index).home.cards;
-    const playerCards = games.at(res.index).player.cards;
+    const homeCards = games.at(index).home.cards;
+    const playerCards = games.at(index).player.cards;
 
     const embed = new MessageEmbed()
             .setTitle('Blackjack')
+            .setDescription(`<@!${id}>`)
             .setColor('DARK_GREEN')
             .addField(`**Home**: ${home}`, homeCards, true)
             .addField(`**Player**: ${player}`, playerCards, true);

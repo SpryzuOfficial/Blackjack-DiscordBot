@@ -1,16 +1,22 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 
+const {drawCard, shuffleNewDeck} = require('../helpers/cards');
+
 const games = [];
 
-const createGame = (id, max) =>
+const createGame = async(id, max) =>
 {
+    const {deck_id} = await shuffleNewDeck(1);
+
     const players = [{
         id,
-        cards: []
+        cards: [],
+        cardsMsg: '\n',
     }];
 
     games.push({
         id,
+        deck_id,
         max,
         players
     });
@@ -18,13 +24,16 @@ const createGame = (id, max) =>
 
 const joinPlayer = (id, playerId) =>
 {
-    const result = searchId(id);
+    const { result, index } = searchId(id);
+    if(!result) return;
 
-    if(searchPlayer(result.index, playerId)) return {res: false, msg: 'You joined already, if you want to quit use `/quitpoker`'};
+    const {result: searchResult} = searchPlayer(index, playerId);
 
-    if(games.at(result.index).players.length === games.at(result.index).max) return {res: false, msg: 'You cant join, the game is full!'};
+    if(searchResult) return {res: false, msg: 'You joined already, if you want to quit use `/quitpoker`'};
 
-    games.at(result.index).players.push({
+    if(games.at(index).players.length === games.at(index).max) return {res: false, msg: 'You cant join, the game is full!'};
+
+    games.at(index).players.push({
         id: playerId,
         cards: []
     });
@@ -34,17 +43,26 @@ const joinPlayer = (id, playerId) =>
 
 const kickPlayer = (id, playerId) =>
 {
-    const result = searchId(id);
+    const { result, index } = searchId(id);
+    if(!result) return;
+
+    if(id === playerId)
+    {
+        games.splice(index, 1);
+        return true;
+    }
+
+    const {result: searchResult} = searchPlayer(index, playerId);
 
     let flag = false;
 
-    if(searchPlayer(result.index, playerId))
+    if(searchResult)
     {
-        games.at(result.index).players.forEach((e, i) =>
+        games.at(index).players.forEach((e, i) =>
         {
             if(e.id === playerId)
             {
-                games.at(result.index).players.splice(i, 1);
+                games.at(index).players.splice(i, 1);
 
                 flag = true;
                 return;
@@ -55,15 +73,45 @@ const kickPlayer = (id, playerId) =>
     return flag;
 }
 
+const giveCardsPlayers = (id, interaction) =>
+{
+    const { result, index } = searchId(id);
+    if(!result) return;
+
+    games.at(index).players.forEach(async(e, i) =>
+    {
+        const {messageString: cardsMsg, codes: cards} = await drawCard(interaction, games.at(index).deck_id, 4);
+    
+        games.at(index).players.at(i).cardsMsg = cardsMsg;
+        games.at(index).players.at(i).cards = cards;
+
+        interaction.client.users.fetch(e.id)
+            .then(res => 
+            {
+                res.send(cardsMsg)
+            });
+    });
+}
+
 const updateMessage = (interaction, id) =>
 {
-    const result = searchId(id);
+    const { result, index } = searchId(id);
+    if(!result)
+    { 
+        const embed = new MessageEmbed()
+            .setTitle('Poker')
+            .setDescription(`Poker game deleted by <@!${id}>`)
+            .setColor('DARK_GREEN');
 
-    const nPlayers = games.at(result.index).players.length;
-    const maxPlayers = games.at(result.index).max;
+        interaction.reply({embeds: [embed]});
+        return;
+    }
+
+    const nPlayers = games.at(index).players.length;
+    const maxPlayers = games.at(index).max;
 
     let players = '';
-    games.at(result.index).players.forEach(e =>
+    games.at(index).players.forEach(e =>
     {
         players += `<@!${e.id}> `;
     });
@@ -114,7 +162,7 @@ const pokerInteractions = (interaction) =>
 
         if(idValues[0] === 'PSG')
         {
-            
+            giveCardsPlayers(idValues[1], interaction);
         }
 
         if(idValues[0] === 'PQG')
@@ -129,17 +177,19 @@ const pokerInteractions = (interaction) =>
 const searchPlayer = (index, playerId) =>
 {
     let result = false;
+    let playerIndex;
 
-    games.at(index).players.forEach(e =>
+    games.at(index).players.forEach((e, i) =>
     {
         if(e.id === playerId)
         {
             result = true;
+            playerIndex = i;
             return;
         }
     });
 
-    return result;
+    return {result, index: playerIndex};
 }
 
 const searchId = (id) =>

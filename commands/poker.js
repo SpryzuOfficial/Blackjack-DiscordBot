@@ -8,14 +8,14 @@ module.exports = {
     data: new SlashCommandBuilder()
             .setName('poker')
             .setDescription('Starts a poker game')
-            .addNumberOption((option) => option.setName('max-players').setDescription('Max number of players').setRequired(true).setMinValue(2).setMaxValue(4)),
+            .addNumberOption((option) => option.setName('num-players').setDescription('Number of players').setRequired(true).setMinValue(2).setMaxValue(4)),
 
     async execute(client, interaction)
     {
         const id = interaction.member.id;
-        const maxPlayers = interaction.options.getNumber('max-players');
+        const maxPlayers = interaction.options.getNumber('num-players');
         
-        createGame(id, maxPlayers);
+        await createGame(id, maxPlayers);
 
         updateMessage(interaction, id);
     }

@@ -157,6 +157,11 @@ const getEmoji = (code = '', suit = '') =>
     return [emoji, suitEmoji];
 }
 
+const shuffleNewDeck = async(deckCount) =>
+{
+    return await (await fetch(`https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=${deckCount}`, {method: 'Get'})).json();
+}
+
 const drawCard = async(interaction, deck_id, count) =>
 {
     return await fetch(`https://deckofcardsapi.com/api/deck/${deck_id}/draw/?count=${count}`, {method: 'Get'})
@@ -164,6 +169,8 @@ const drawCard = async(interaction, deck_id, count) =>
         .then(cards_json =>
         {
             if(!checkSuccess(cards_json, interaction)) return;
+
+            const codes = [];
 
             let score = 0;
 
@@ -174,17 +181,20 @@ const drawCard = async(interaction, deck_id, count) =>
             {
                 const [card, suit] = getEmoji(e.code, e.suit);
 
+                codes.push(e.code);
+
                 cardsMessageTop += card + ' ';
                 cardsMessageBottom += suit + ' ';
 
                 score += e.value.length > 1 ? 10 : Number.parseInt(e.value);
             });
 
-            return {messageString: cardsMessageTop + '\n' + cardsMessageBottom, score};
+            return {messageString: cardsMessageTop + '\n' + cardsMessageBottom, score, codes};
         });
 }
 
 module.exports = {
     getEmoji,
+    shuffleNewDeck,
     drawCard
 };
